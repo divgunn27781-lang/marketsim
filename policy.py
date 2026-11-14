@@ -69,10 +69,11 @@ def transmission_regression(res):
     ev = res.dropna(subset=["surprise_bp"]).groupby(["event_id", "category"], as_index=False) \
         .agg(car=("car_m1_p1", "mean"), surprise=("surprise_bp", "first"))
     rows = []
+    cols = ["group", "n", "slope_pct_per_bp", "stderr", "r2", "p_value"]
     for name, g in [("all", ev)] + [(c, d) for c, d in ev.groupby("category")]:
         if len(g) < 5:
             continue
         lr = stats.linregress(g["surprise"], g["car"])
         rows.append({"group": name, "n": len(g), "slope_pct_per_bp": lr.slope, "stderr": lr.stderr,
                      "r2": lr.rvalue ** 2, "p_value": lr.pvalue})
-    return pd.DataFrame(rows)
+    return pd.DataFrame(rows, columns=cols)   # empty (but with columns) when no events carry a surprise size
