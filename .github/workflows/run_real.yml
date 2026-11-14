@@ -12,6 +12,17 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12", cache: pip }
       - run: pip install -r requirements.txt
+      - name: Tidy uploaded files into folders
+        run: |
+          mkdir -p gm_model tools data
+          for f in __init__ data forecast risk policy contagion; do
+            if [ -f "$f.py" ]; then mv "$f.py" gm_model/; fi
+          done
+          for f in build_html.py report_template.html; do
+            if [ -f "$f" ]; then mv "$f" tools/; fi
+          done
+          if [ -f policy_events.csv ]; then mv policy_events.csv data/; fi
+          ls gm_model tools
       - run: python3 build_db.py --no-synthetic
       - run: python3 fetch_real_data.py
       - run: python3 run_pipeline.py --include-real-events
