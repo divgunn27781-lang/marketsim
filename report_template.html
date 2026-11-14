@@ -1,0 +1,303 @@
+<title>Global Markets Model Report</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: single reading column (max 980px) with a sticky section nav; one chart per finding, table beneath for the exact numbers. */
+:root {
+  --bg: #f4f6f9; --surface: #ffffff; --ink: #12161c; --ink2: #464e5a; --muted: #67707d; --line: #dde2e8;
+  --accent: #2a78d6; --accent-soft: #e4eefb; --warm: #eb6834; --good: #0c8a5f;
+  --warn-bg: #fff4d6; --warn-ink: #5c4300; --warn-line: #e6c15a;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-head: "Space Grotesk", "Inter", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1116; --surface: #161a21; --ink: #eceff3; --ink2: #b6bdc8; --muted: #8d96a3; --line: #2a303a;
+    --accent: #3987e5; --accent-soft: #1b2a40; --warm: #d95926; --good: #3ec794;
+    --warn-bg: #2d2410; --warn-ink: #f1d58a; --warn-line: #6b5420; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1116; --surface: #161a21; --ink: #eceff3; --ink2: #b6bdc8; --muted: #8d96a3; --line: #2a303a;
+  --accent: #3987e5; --accent-soft: #1b2a40; --warm: #d95926; --good: #3ec794;
+  --warn-bg: #2d2410; --warn-ink: #f1d58a; --warn-line: #6b5420; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 400 15px/1.55 var(--font-body); margin: 0; }
+.wrap { max-width: 980px; margin: 0 auto; padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--font-head); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: clamp(28px, 5vw, 40px); line-height: 1.1; font-weight: 700; }
+h2 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+h3 { font-size: 15px; font-weight: 600; margin: 22px 0 6px; }
+p { margin: 0 0 12px; max-width: 68ch; }
+.sub { color: var(--ink2); margin-top: 8px; }
+.eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 8px; }
+.banner { margin: 20px 0 0; padding: 12px 14px; background: var(--warn-bg); color: var(--warn-ink); border: 1px solid var(--warn-line); border-radius: 6px; font-size: 14px; }
+.banner strong { font-weight: 600; }
+nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); margin-top: 22px; display: flex; gap: 4px; overflow-x: auto; }
+nav a { color: var(--ink2); text-decoration: none; padding: 10px 12px; font-size: 14px; font-weight: 500; white-space: nowrap; border-bottom: 2px solid transparent; }
+nav a:hover, nav a:focus-visible { color: var(--ink); border-bottom-color: var(--accent); outline: none; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-top: 22px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.stat b { display: block; font: 600 26px/1.15 var(--font-head); font-variant-numeric: tabular-nums; }
+.stat span { color: var(--muted); font-size: 13px; }
+section { margin-top: 44px; scroll-margin-top: 56px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; margin: 14px 0; min-width: 0; }
+.card h3 { margin-top: 0; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.note { color: var(--muted); font-size: 13px; margin: 6px 0 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink2); margin: 0 0 8px; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { font-family: var(--font-body); fill: var(--ink2); font-size: 11px; }
+svg .val { fill: var(--ink); font-variant-numeric: tabular-nums; }
+svg .grid { stroke: var(--line); stroke-width: 1; }
+svg .axis { stroke: var(--muted); stroke-width: 1; }
+.bar { transition: opacity .12s; cursor: default; }
+.bar:hover { opacity: .8; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 12px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); }
+th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface); font-weight: 500; }
+th { font-weight: 600; color: var(--ink2); cursor: pointer; user-select: none; background: var(--surface); }
+th:hover { color: var(--ink); }
+th[aria-sort="ascending"]::after { content: " \25B2"; font-size: 9px; }
+th[aria-sort="descending"]::after { content: " \25BC"; font-size: 9px; }
+tr:last-child td { border-bottom: 0; }
+td.neg { color: var(--warm); }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+.pill.ok { background: color-mix(in srgb, var(--good) 16%, transparent); color: var(--good); }
+.pill.bad { background: color-mix(in srgb, var(--warm) 16%, transparent); color: var(--warm); }
+#tip { position: fixed; pointer-events: none; z-index: 20; background: var(--ink); color: var(--bg); padding: 6px 9px; border-radius: 5px; font-size: 12px; line-height: 1.4; max-width: 240px; opacity: 0; transition: opacity .08s; }
+ul.plain { margin: 0; padding-left: 18px; max-width: 72ch; } ul.plain li { margin-bottom: 6px; }
+footer { margin-top: 48px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 16px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">Run report</div>
+  <h1>Global Markets Model</h1>
+  <p class="sub" id="subline"></p>
+  <div class="banner" id="banner" role="note" hidden><strong>Synthetic data.</strong> Prices, daily flows and policy events in this run were generated to test the pipeline, with structure injected on purpose. Nothing here describes real markets. Load real feeds with <code>ingest_csv.py</code> and re-run.</div>
+
+  <nav aria-label="Sections">
+    <a href="#forecasts">Forecasts</a><a href="#risk">Risk</a><a href="#contagion">Contagion</a><a href="#policy">Policy events</a><a href="#limits">Limitations</a>
+  </nav>
+
+  <div class="stats" id="stats"></div>
+
+  <section id="forecasts">
+    <h2>Return and volatility forecasts</h2>
+    <p>Five-day-ahead return forecasts from a walk-forward ridge model that never sees future data. Skill is out-of-sample R&sup2; against a historical-mean forecast. Positive means the model beat the mean.</p>
+    <div class="card">
+      <h3>Out-of-sample R&sup2; by market</h3>
+      <div class="legend"><span><i style="background:var(--accent)"></i>Clark-West t &ge; 1.65 (significant at 5%)</span><span><i style="background:var(--accent);opacity:.3"></i>Not significant</span></div>
+      <div id="c-oos"></div>
+      <p class="note">Overlapping 5-day targets are handled with Newey-West errors. <span id="fcnote"></span></p>
+    </div>
+    <div class="tablewrap" id="t-fc"></div>
+  </section>
+
+  <section id="risk">
+    <h2>Risk</h2>
+    <p>One-day value-at-risk (VaR) and expected shortfall (ES), as a percentage of index value. The composite score ranks each market from 0 to 100 on volatility, tail loss, drawdown, tail beta and correlation.</p>
+    <div>
+      <div class="card"><h3>Composite risk score</h3><div id="c-score"></div></div>
+      <div class="card"><h3>99% expected shortfall (historical)</h3><div id="c-es"></div></div>
+    </div>
+    <h3>Risk metrics</h3>
+    <div class="tablewrap" id="t-risk"></div>
+    <p class="note">Backtest: rolling 750-day GARCH 99% VaR. Kupiec p below 0.05 means the exception count is rejected as too high or low.</p>
+    <h3>Stress scenarios</h3>
+    <p>A global shock of 3, 5 and 8 standard deviations, passed to each market through its beta on global down-days, plus its worst historical window.</p>
+    <div class="tablewrap" id="t-stress"></div>
+  </section>
+
+  <section id="contagion">
+    <h2>Contagion</h2>
+    <p>How much of each market's forecast uncertainty comes from shocks elsewhere (Diebold-Yilmaz spillover index), and how correlations behave when global volatility rises.</p>
+    <div class="grid2">
+      <div class="card"><h3>Total spillover index (%)</h3><div id="c-roll"></div><p class="note">Rolling 250 days, VAR(1), 10-day horizon.</p></div>
+      <div class="card"><h3>Correlation and concentration</h3>
+        <div class="legend"><span><i style="background:var(--accent)"></i>Average pairwise correlation (60d)</span><span><i style="background:var(--warm)"></i>Absorption ratio (250d)</span></div>
+        <div id="c-corr"></div></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h3>Average correlation: calm vs stress days</h3><div id="c-regime"></div></div>
+      <div class="card"><h3>Net spillover by market (points)</h3><div id="c-net"></div>
+        <p class="note">Positive means a net transmitter. Same-day closes are used, so ranks partly reflect market beta and time zones, not cause.</p></div>
+    </div>
+  </section>
+
+  <section id="policy">
+    <h2>Policy events</h2>
+    <p id="pol-lead"></p>
+    <h3>Average abnormal return by policy type</h3>
+    <div class="tablewrap" id="t-cat"></div>
+    <h3>Sensitivity to the size of the surprise</h3>
+    <div class="tablewrap" id="t-reg"></div>
+    <p class="note">Slope is the announcement-window return (days &minus;1 to +1) in percent per basis point of surprise. <span id="truth"></span></p>
+  </section>
+
+  <section id="limits">
+    <h2>Limitations</h2>
+    <ul class="plain">
+      <li>Same-day closes are used for every market, so time-zone differences are not corrected.</li>
+      <li>GARCH uses Gaussian quasi-maximum likelihood. Fat tails are handled by filtered historical simulation.</li>
+      <li>Hedge fund, private equity and investment banking figures are stored in the database for context. They are quarterly or annual, so they do not yet feed the return model.</li>
+      <li>This is an analytical prototype, not investment advice or a validated production risk system.</li>
+    </ul>
+  </section>
+  <footer>Generated by <code>tools/build_html.py</code> from the CSV files in <code>outputs/</code>.</footer>
+</div>
+<div id="tip" role="tooltip"></div>
+
+<script>
+const D = /*DATA*/null;
+const $ = id => document.getElementById(id);
+const f = (v, n = 2) => v == null ? "" : Number(v).toFixed(n);
+const tip = $("tip");
+document.addEventListener("pointermove", e => {
+  const t = e.target.closest && e.target.closest("[data-tip]");
+  if (!t) { tip.style.opacity = 0; return; }
+  tip.innerHTML = t.getAttribute("data-tip");
+  const w = tip.offsetWidth, x = Math.min(e.clientX + 14, innerWidth - w - 8);
+  tip.style.left = Math.max(8, x) + "px"; tip.style.top = (e.clientY + 16) + "px"; tip.style.opacity = 1;
+});
+document.addEventListener("pointerleave", () => tip.style.opacity = 0);
+
+$("fcnote").textContent = D.meta.synthetic ? "In this run the skill comes from a flow-to-return link planted in the synthetic data." : "Skill near zero or negative is the normal result for real equity indexes, so treat any positive figure with scepticism.";
+$("banner").hidden = !D.meta.synthetic;
+$("subline").textContent = `Data through ${D.meta.through}. ${D.meta.markets} exchanges, ${D.meta.days.toLocaleString()} trading days, ${D.meta.horizon}-day forecast horizon.`;
+$("stats").innerHTML = [
+  [D.meta.markets, "exchanges modelled"],
+  [D.meta.total_spill.toFixed(1) + "%", "total spillover index"],
+  [D.meta.calm.toFixed(2) + " → " + D.meta.stress.toFixed(2), "avg correlation, calm → stress"],
+  [D.meta.ar.toFixed(2), "absorption ratio, latest"],
+].map(([b, s]) => `<div class="stat"><b>${b}</b><span>${s}</span></div>`).join("");
+
+/* ---------- horizontal bar chart (handles negatives) ---------- */
+function barH(id, items, o = {}) {
+  const W = 560, L = o.left || 74, R = 56, rh = 21, gap = 5, H = items.length * (rh + gap) + 8;
+  const vals = items.map(i => i.v), lo = Math.min(0, ...vals), hi = Math.max(0, ...vals);
+  const negPad = lo < 0 ? 44 : 0, span = (hi - lo) || 1, x = v => L + negPad + (v - lo) / span * (W - L - negPad - R), x0 = x(0);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${o.label || ""}">`;
+  s += `<line class="axis" x1="${x0}" x2="${x0}" y1="0" y2="${H}"/>`;
+  items.forEach((it, k) => {
+    const y = 4 + k * (rh + gap), a = Math.min(x0, x(it.v)), w = Math.max(2, Math.abs(x(it.v) - x0));
+    const fill = it.color || "var(--accent)";
+    s += `<text x="${L - 8}" y="${y + rh / 2 + 4}" text-anchor="end">${it.id}</text>`;
+    s += `<rect class="bar" x="${a}" y="${y}" width="${w}" height="${rh}" rx="3" fill="${fill}" opacity="${it.op ?? 1}" data-tip="${it.tip}"/>`;
+    const right = it.v >= 0;
+    s += `<text class="val" x="${right ? a + w + 6 : a - 6}" y="${y + rh / 2 + 4}" text-anchor="${right ? "start" : "end"}">${(o.fmt || f)(it.v)}</text>`;
+  });
+  return s + "</svg>";
+}
+
+/* ---------- line chart with crosshair ---------- */
+function lineChart(id, series, o = {}) {
+  const W = 560, Ht = 220, L = 40, R = 12, T = 10, B = 24;
+  const n = series[0].pts.length;
+  const all = series.flatMap(s => s.pts.map(p => p.v));
+  let lo = o.min ?? Math.min(...all), hi = o.max ?? Math.max(...all);
+  const pad = (hi - lo) * .08 || 1; if (o.min == null) lo -= pad; if (o.max == null) hi += pad;
+  const X = i => L + i / (n - 1) * (W - L - R), Y = v => T + (1 - (v - lo) / (hi - lo)) * (Ht - T - B);
+  let s = `<svg viewBox="0 0 ${W} ${Ht}" role="img" aria-label="${o.label || ""}" id="${id}-svg">`;
+  for (let k = 0; k <= 4; k++) {
+    const v = lo + (hi - lo) * k / 4, y = Y(v);
+    s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${y}" y2="${y}"/><text x="${L - 6}" y="${y + 4}" text-anchor="end">${(o.fmt || f)(v)}</text>`;
+  }
+  const dates = series[0].pts.map(p => p.d);
+  [0, Math.floor(n / 3), Math.floor(2 * n / 3), n - 1].forEach((i, k, a) => {
+    s += `<text x="${X(i)}" y="${Ht - 6}" text-anchor="${k === 0 ? "start" : k === a.length - 1 ? "end" : "middle"}">${dates[i].slice(0, 7)}</text>`;
+  });
+  series.forEach(se => {
+    s += `<polyline fill="none" stroke="${se.color}" stroke-width="2" stroke-linejoin="round" points="${se.pts.map((p, i) => X(i) + "," + Y(p.v)).join(" ")}"/>`;
+    const lp = se.pts[n - 1]; s += `<circle cx="${X(n - 1)}" cy="${Y(lp.v)}" r="4" fill="${se.color}" stroke="var(--surface)" stroke-width="2"/>`;
+  });
+  s += `<line id="${id}-x" class="axis" y1="${T}" y2="${Ht - B}" style="display:none"/>`;
+  s += `<rect id="${id}-hit" x="${L}" y="${T}" width="${W - L - R}" height="${Ht - T - B}" fill="transparent"/></svg>`;
+  $(id).innerHTML = s;
+  const svg = $(id + "-svg"), xl = $(id + "-x"), hit = $(id + "-hit");
+  hit.addEventListener("pointermove", e => {
+    const r = svg.getBoundingClientRect(), vx = (e.clientX - r.left) / r.width * W;
+    const i = Math.max(0, Math.min(n - 1, Math.round((vx - L) / (W - L - R) * (n - 1))));
+    xl.setAttribute("x1", X(i)); xl.setAttribute("x2", X(i)); xl.style.display = "";
+    tip.innerHTML = `<b>${dates[i]}</b><br>` + series.map(se => `${se.name}: ${(o.fmt || f)(se.pts[i].v)}`).join("<br>");
+    const w = tip.offsetWidth; tip.style.left = Math.max(8, Math.min(e.clientX + 14, innerWidth - w - 8)) + "px"; tip.style.top = (e.clientY + 16) + "px"; tip.style.opacity = 1;
+  });
+  hit.addEventListener("pointerleave", () => { xl.style.display = "none"; tip.style.opacity = 0; });
+}
+
+/* ---------- sortable table ---------- */
+function table(id, cols, rows) {
+  const el = $(id); let sortKey = null, dir = -1;
+  const draw = () => {
+    const data = sortKey ? [...rows].sort((a, b) => dir * ((a[sortKey] ?? -1e9) - (b[sortKey] ?? -1e9) || 0)) : rows;
+    el.innerHTML = `<table><thead><tr>${cols.map(c => `<th data-k="${c.k}" ${sortKey === c.k ? `aria-sort="${dir > 0 ? "ascending" : "descending"}"` : ""}>${c.h}</th>`).join("")}</tr></thead><tbody>` +
+      data.map(r => `<tr>${cols.map(c => {
+        const v = r[c.k]; const txt = c.r ? c.r(v, r) : (typeof v === "number" ? f(v, c.d ?? 2) : (v ?? ""));
+        return `<td class="${c.neg && v < 0 ? "neg" : ""}">${txt}</td>`;
+      }).join("")}</tr>`).join("") + "</tbody></table>";
+    el.querySelectorAll("th").forEach(th => th.addEventListener("click", () => {
+      const k = th.dataset.k; if (k === "id") { sortKey = null; } else { dir = sortKey === k ? -dir : -1; sortKey = k; } draw();
+    }));
+  };
+  draw();
+}
+
+/* ---------- forecasts ---------- */
+const fcs = [...D.fc].sort((a, b) => b.oos_r2 - a.oos_r2);
+$("c-oos").innerHTML = barH("c-oos", fcs.map(r => ({
+  id: r.id, v: r.oos_r2 * 100, op: r.cw_t >= 1.65 ? 1 : .3,
+  tip: `<b>${r.id}</b><br>OOS R&sup2; ${f(r.oos_r2 * 100)}%<br>Hit rate ${f(r.hit_rate * 100, 1)}%<br>Clark-West t ${f(r.cw_t)}`
+})), { fmt: v => f(v, 1) + "%", label: "Out-of-sample R squared by market" });
+table("t-fc", [
+  { k: "id", h: "Market" }, { k: "point", h: "Forecast %", d: 2, neg: 1 }, { k: "lo80", h: "80% low", neg: 1 }, { k: "hi80", h: "80% high" },
+  { k: "oos_r2", h: "OOS R&sup2;", d: 3, neg: 1 }, { k: "hit_rate", h: "Hit rate", d: 3 }, { k: "cw_t", h: "CW t", neg: 1 }, { k: "ann_vol", h: "Ann. vol %", d: 1 }
+], fcs);
+
+/* ---------- risk ---------- */
+const scores = D.risk.filter(r => r.risk_score != null).sort((a, b) => b.risk_score - a.risk_score);
+$("c-score").innerHTML = barH("c-score", scores.map(r => ({ id: r.id, v: r.risk_score, tip: `<b>${r.id}</b><br>Risk score ${f(r.risk_score, 0)} of 100` })), { fmt: v => f(v, 0), left: 74, label: "Composite risk score" });
+const es = D.risk.filter(r => r.id !== "GLOBAL_EW").sort((a, b) => b.es99_hist - a.es99_hist);
+$("c-es").innerHTML = barH("c-es", es.map(r => ({ id: r.id, v: r.es99_hist, color: "var(--warm)", tip: `<b>${r.id}</b><br>ES 99% ${f(r.es99_hist)}%<br>VaR 99% ${f(r.var99_hist)}%` })), { fmt: v => f(v) + "%", left: 74, label: "99 percent expected shortfall" });
+table("t-risk", [
+  { k: "id", h: "Market" }, { k: "var99_hist", h: "VaR 99%" }, { k: "es99_hist", h: "ES 99%" }, { k: "var99_garch_fhs", h: "VaR (GARCH)" }, { k: "es99_garch_fhs", h: "ES (GARCH)" },
+  { k: "bt_exceptions", h: "Exceptions", d: 0 }, { k: "bt_expected", h: "Expected", d: 1 },
+  { k: "kupiec_p", h: "Kupiec p", r: v => `<span class="pill ${v >= .05 ? "ok" : "bad"}">${f(v)}</span>` }, { k: "risk_score", h: "Score", d: 0 }
+], [...D.risk].sort((a, b) => (b.risk_score ?? -1) - (a.risk_score ?? -1)));
+table("t-stress", [
+  { k: "id", h: "Market" }, { k: "shock_3sigma_pct", h: "3&sigma; shock %", neg: 1 }, { k: "shock_5sigma_pct", h: "5&sigma; shock %", neg: 1 }, { k: "shock_8sigma_pct", h: "8&sigma; shock %", neg: 1 },
+  { k: "worst_5d_pct", h: "Worst 5-day %", neg: 1 }, { k: "worst_day_pct", h: "Worst day %", neg: 1 }
+], D.stress.filter(r => r.shock_3sigma_pct != null).sort((a, b) => a.shock_3sigma_pct - b.shock_3sigma_pct));
+
+/* ---------- contagion ---------- */
+lineChart("c-roll", [{ name: "Spillover index", color: "var(--accent)", pts: D.roll.map(p => ({ d: p.d, v: p.v })) }], { fmt: v => f(v, 1), label: "Rolling total spillover index" });
+lineChart("c-corr", [
+  { name: "Avg correlation", color: "var(--accent)", pts: D.corr.map(p => ({ d: p.d, v: p.c })) },
+  { name: "Absorption ratio", color: "var(--warm)", pts: D.corr.map(p => ({ d: p.d, v: p.ar })) }
+], { fmt: v => f(v, 2), min: 0, max: 1, label: "Average correlation and absorption ratio" });
+$("c-regime").innerHTML = barH("c-regime", [
+  { id: "Calm days", v: D.meta.calm, tip: `Average pairwise correlation on calm days: ${f(D.meta.calm, 3)}` },
+  { id: "Stress days", v: D.meta.stress, color: "var(--warm)", tip: `Average pairwise correlation on stress days: ${f(D.meta.stress, 3)}` }
+], { fmt: v => f(v, 2), left: 80, label: "Correlation in calm versus stress" });
+const net = [...D.spill].sort((a, b) => b.net - a.net);
+$("c-net").innerHTML = barH("c-net", net.map(r => ({
+  id: r.id, v: r.net, color: r.net >= 0 ? "var(--accent)" : "var(--warm)",
+  tip: `<b>${r.id}</b><br>Transmits ${f(r.to_others, 1)}<br>Receives ${f(r.from_others, 1)}<br>Net ${f(r.net, 1)}`
+})), { fmt: v => f(v, 1), label: "Net spillover by market" });
+
+/* ---------- policy ---------- */
+$("truth").textContent = D.meta.synthetic ? "The injected truth is about \u22120.052." : "";
+$("pol-lead").textContent = `${D.meta.events} ${D.meta.synthetic ? "synthetic " : ""}events analysed with a market-model event study. The benchmark for each event excludes the event's own country.`;
+table("t-cat", [
+  { k: "category", h: "Policy type" }, { k: "n_events", h: "Events", d: 0 }, { k: "mean_car_m1_p1", h: "CAR (-1,+1) %", d: 3, neg: 1 }, { k: "t_car_m1_p1", h: "t", neg: 1 },
+  { k: "mean_car_0_p5", h: "CAR (0,+5) %", d: 3, neg: 1 }, { k: "t_car_0_p5", h: "t", neg: 1 }
+], D.cat.map(r => ({ ...r, id: r.category })));
+table("t-reg", [
+  { k: "group", h: "Group" }, { k: "n", h: "Events", d: 0 }, { k: "slope_pct_per_bp", h: "Slope % per bp", d: 4, neg: 1 }, { k: "stderr", h: "Std error", d: 4 },
+  { k: "r2", h: "R&sup2;", d: 3 }, { k: "p_value", h: "p-value", d: 4 }
+], D.reg.map(r => ({ ...r, id: r.group })));
+</script>
